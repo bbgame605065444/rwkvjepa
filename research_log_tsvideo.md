@@ -54,3 +54,14 @@ token temporal RWKV + JEPA, **+ linear residual** (idea#1) and **forecast-only**
 dlinear, jepa_raw. **Success:** `period-CI < 0.389` (cross the bar) OR ≥3% better than jepa_lag 0.4295 with the
 video genuinely contributing (period-CI < raw-CI). Mis-period control (P=7) must regress ≥0.03 (isolates phase).
 **Status.** awaiting user steer (loop mode = checkpoint each iteration).
+
+## Autoresearch (self-contained harness, train.py) — round-1 (2026-06-25)
+Baseline = cvjepa lag motif-MoE JEPA-off (0.388 @ run.py). Goal: video-driven gains; GTR seasonal + video residual.
+| config | MSE | note |
+|---|--:|---|
+| **fused_des (video-primary RCF)** | **0.3800** | KEEP — beats gtr/cvjepa/linear-bar |
+| gtr (seasonal only) | 0.3804 | strong seasonal ref |
+| cvjepa_ai (videos_ai) | 0.3821 | render test: == human |
+| cvjepa_human (videos) | 0.3821 | **videos==videos_ai** (8-bit lossless) → use videos_ai |
+| fused_boost (GTR-primary) | 0.4107 | DISCARD (full+full ensemble conflicts) |
+**Verdict:** fused_des kept (0.3800). videos_ai selected (ties videos). **Video contribution marginal** (0.3800 vs gtr 0.3804) → round-2 focus = make the video carry the signal; add cycle-only ablation (fuse_video_off) to measure it.

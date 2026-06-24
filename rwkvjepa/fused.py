@@ -36,6 +36,7 @@ class Model(nn.Module):
         self.pred_len = configs.pred_len
         self.seq_len = configs.seq_len
         self.deseason = bool(int(_get(configs, "fuse_deseason", 1)))
+        self.video_off = bool(int(_get(configs, "fuse_video_off", 0)))   # ablation: cycle-only (measure video contribution)
         self.video = VideoModel(configs)                  # CI lag-video motif-MoE
         self.aux_loss = None
         if self.deseason:
@@ -53,6 +54,9 @@ class Model(nn.Module):
             idx = (cycle_index.view(-1, 1) + ar.view(1, -1)) % cyc          # [B, L+H]
             cyc_full = self.cycleQ[idx]                                     # [B, L+H, V]
             in_cycle, out_cycle = cyc_full[:, :L], cyc_full[:, L:]
+            if self.video_off:                                             # ablation: cycle-only
+                self.aux_loss = None
+                return out_cycle
             residual = self.video.forecast(x_enc - in_cycle)               # VIDEO is primary
             self.aux_loss = self.video.aux_loss
             return out_cycle + residual

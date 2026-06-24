@@ -47,7 +47,7 @@ def build_args(a):
         cm_balance=a.cm_balance, cm_expert_hidden=a.cm_expert_hidden,
         vr_jepa_weight=a.vr_jepa_weight, vr_mask=a.vr_mask, vr_ema=a.vr_ema,
         vr_pred_layers=a.vr_pred_layers, vr_linear_residual=a.vr_linear_residual, vr_revin=1,
-        fuse_res_scale=a.fuse_res_scale, fuse_deseason=a.fuse_deseason,
+        fuse_res_scale=a.fuse_res_scale, fuse_deseason=a.fuse_deseason, fuse_video_off=a.fuse_video_off,
     )
 
 
@@ -100,6 +100,7 @@ def main():
     ap.add_argument("--vr_ema", type=float, default=0.996); ap.add_argument("--vr_pred_layers", type=int, default=1)
     ap.add_argument("--vr_linear_residual", type=int, default=0)
     ap.add_argument("--fuse_res_scale", type=float, default=0.3); ap.add_argument("--fuse_deseason", type=int, default=0)
+    ap.add_argument("--fuse_video_off", type=int, default=0)
     ap.add_argument("--seed", type=int, default=2021)
     a = ap.parse_args()
     torch.manual_seed(a.seed); np.random.seed(a.seed)
