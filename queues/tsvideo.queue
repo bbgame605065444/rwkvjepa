@@ -1,0 +1,13 @@
+# Iteration-1: TS-video forecasting on ETTh1 h96 (10 epochs each). GPU-gated.
+# control + encoder sweep + forecast-only + linear-residual (video-native-value test)
+bash /mnt/sdc/codes/Lorentz-rwkv/ts_decompose23d/run_tsvideo_cell.sh DLinear dlinear
+bash /mnt/sdc/codes/Lorentz-rwkv/ts_decompose23d/run_tsvideo_cell.sh VideoRWKVJEPA jepa_raw --vr_encoder raw
+bash /mnt/sdc/codes/Lorentz-rwkv/ts_decompose23d/run_tsvideo_cell.sh VideoRWKVJEPA jepa_splat --vr_encoder splat
+bash /mnt/sdc/codes/Lorentz-rwkv/ts_decompose23d/run_tsvideo_cell.sh VideoRWKVJEPA jepa_gram --vr_encoder gram
+bash /mnt/sdc/codes/Lorentz-rwkv/ts_decompose23d/run_tsvideo_cell.sh VideoRWKVJEPA jepa_gaf --vr_encoder gaf
+bash /mnt/sdc/codes/Lorentz-rwkv/ts_decompose23d/run_tsvideo_cell.sh VideoRWKVJEPA jepa_recur --vr_encoder recur
+bash /mnt/sdc/codes/Lorentz-rwkv/ts_decompose23d/run_tsvideo_cell.sh VideoRWKVJEPA jepa_lag --vr_encoder lag
+bash /mnt/sdc/codes/Lorentz-rwkv/ts_decompose23d/run_tsvideo_cell.sh VideoRWKVJEPA jepa_fused --vr_encoder fused
+bash /mnt/sdc/codes/Lorentz-rwkv/ts_decompose23d/run_tsvideo_cell.sh VideoRWKVJEPA jepa_fused_fc0 --vr_encoder fused --vr_jepa_weight 0
+bash /mnt/sdc/codes/Lorentz-rwkv/ts_decompose23d/run_tsvideo_cell.sh VideoRWKVJEPA jepa_raw_linres --vr_encoder raw --vr_linear_residual 1
+bash /mnt/sdc/codes/Lorentz-rwkv/ts_decompose23d/run_tsvideo_cell.sh VideoRWKVJEPA jepa_fused_linres --vr_encoder fused --vr_linear_residual 1

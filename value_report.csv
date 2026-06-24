@@ -1,0 +1,10 @@
+format,probe_mse,probe_mae,feat,stride
+raw,0.5647,0.524,672,1
+splat_field,0.629,0.5561,6272,13
+chan_lag,0.6664,0.5813,5376,6
+radar_glyph,1.0449,0.7785,6272,13
+chan_scale,1.1811,0.8477,3024,2
+chan_corr,1.6178,0.9759,4704,1
+chan_gaf,1.7488,1.0277,4704,1
+chan_gram,2.3843,1.2119,4704,1
+chan_recur,3.9342,1.3859,4704,1

@@ -1,0 +1,56 @@
+# Research log — TS-video forecasting (ETTh1)
+
+Loop to make a *video* representation of ETTh1 genuinely forecast well (beat NLinear 0.389 AND add
+value over a linear backbone). Cadence = repo `research-loop` skill (diagnose → lit → ONE change →
+smoke → GPU-gate → backfill). Eval = ETTh1 h96, features=M, seq_len=96, denorm-MSE (TSL).
+
+Reference bar: **NLinear (1 matrix, channel-indep, RevIN) = 0.389**. persistence = 1.28.
+
+---
+
+## Iter 0 — baselines (done)
+**Numbers.** VideoRWKV-MAE (splat, patchify, co-trained MAE) 15ep = **0.586 / 0.512**.
+VideoRWKVJEPA (splat, no-patchify, JEPA) 15ep = **0.431 / 0.443**. → no-patchify + JEPA already
+closed ~75% of the gap vs MAE.
+**Diagnosis (`GAP_DIAGNOSIS.md`, `value_report.md`).** Gap is the *forecasting pathway*, not the
+representation: the splat is well-conditioned (cond 1.4, exact channel recovery 7e-30); a 1-matrix
+linear forecaster = 0.389. Linear-probe ranking: linear-preserving reps keep value (raw 0.565, splat
+0.629, lag 0.666); nonlinear pairwise reps destroy linear value (recur 3.93, gram 2.38, gaf 1.75,
+corr 1.62). In the no-patchify JEPA, splat is a rank-7 linear map the embed absorbs ⇒ splat-JEPA ≈
+raw-JEPA; *the video only adds value if the frame carries nonlinear cross-channel structure*.
+
+## Iter 1 — encoder sweep + forecast-only + linear residual  (2026-06-25)
+**Problem.** VideoRWKVJEPA (0.431) still loses to NLinear (0.389); the "video" has not been shown to
+add value over a linear backbone. Which representation (if any) does the deep model extract value
+from, and does fusing nonlinear cross-channel reps + a linear residual cross the 0.389 bar?
+**Hypothesis (mechanism).** (a) channel-mixing + frame-as-token + (b) no linear/trend path + (c)
+co-trained JEPA aux competing — over-determined underfit. Fusing nonlinear reps (gram/gaf/recur)
+gives the frame token info the linear path can't reconstruct; a linear residual guarantees ≤ ~0.389.
+**Literature (`LITERATURE.md`).** VisionTS (period-reshape P×⌊L/P⌋ + CI + RevIN + MAE) ≈ 0.390 zero-shot
+[arxiv 2408.17253]; top falsifiable moves: linear/NLinear residual (idea#1), channel-independent
+rendering (idea#2), periodicity reshape (idea#3), forecast-only control (idea#4),
+pretrain→finetune (idea#5). JEPA-for-forecasting demoted to aux regularizer (TS-JEPA caution).
+**Plan.** ONE axis = the input representation + two controls. 11 GPU-gated cells (10 ep), all
+additive (default-OFF flags): `DLinear` (linear control); `--vr_encoder {raw,splat,gram,gaf,recur,
+lag,fused}`; `jepa_fused_fc0` (`--vr_jepa_weight 0`, forecast-only control); `jepa_raw_linres` &
+`jepa_fused_linres` (`--vr_linear_residual 1`). Queue: `queues/tsvideo.queue` via `_gpu_gate.sh`.
+**Success criteria (set before running).**
+- *video-native value*: `jepa_fused_linres < dlinear` AND `< jepa_raw_linres` by ≥2% (the video earns its place).
+- *which rep*: any `--vr_encoder X` (no linres) `< jepa_raw` ⇒ X adds deep value beyond raw channels.
+- *aux verdict*: `jepa_fused_fc0` vs `jepa_fused` ⇒ does co-trained JEPA help (<) or hurt (>) here.
+**Result (11 cells, 5-parallel).** dlinear **0.3986** (bar ✓). Best video = jepa_lag **0.4295** (+7.8%).
+**Video-native value REFUTED:** jepa_fused_linres 0.4399 > dlinear 0.3986 AND > jepa_raw_linres 0.4350.
+Nonlinear reps HURT (gram 0.545, gaf 0.532, recur 0.510 ≫ raw 0.443) — as the probe predicted; fusion ≈ raw
+(no gain). JEPA aux mildly helps (fused 0.4442 < fused_fc0 0.4500). Linear residual helped raw (0.443→0.435)
+but didn't reach the bar (video-branch interference). **Real, not artifact** (control reproduces 0.39; criteria
+set in advance). **Verdict:** channel-mixed frame-as-token is capped below linear on ETT — matches the
+literature. Next problem exposed: need channel-independence + periodicity-reshape.
+
+## Iter 2 (proposed) — VisionTS recipe: channel-independent periodicity-reshape
+**Problem.** Iter-1 refuted video-native value for the channel-mixed frame-as-token design.
+**Plan.** New `--vr_encoder period`: per-channel (batch B·V), reshape the L-window into a P×⌊L/P⌋ image
+(P=24 for hourly ETTh1; columns share phase), RevIN + continuous float "patches" (no rasterization), frame-as-
+token temporal RWKV + JEPA, **+ linear residual** (idea#1) and **forecast-only** ablation (idea#4). Controls:
+dlinear, jepa_raw. **Success:** `period-CI < 0.389` (cross the bar) OR ≥3% better than jepa_lag 0.4295 with the
+video genuinely contributing (period-CI < raw-CI). Mis-period control (P=7) must regress ≥0.03 (isolates phase).
+**Status.** awaiting user steer (loop mode = checkpoint each iteration).

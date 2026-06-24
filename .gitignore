@@ -1,0 +1,9 @@
+videos/
+videos_ai/
+figs_*/
+tensors/
+paper_figures/
+.remember/
+__pycache__/
+*.pyc
+Time-Series-Library/
