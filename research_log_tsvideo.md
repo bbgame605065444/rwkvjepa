@@ -79,3 +79,20 @@ Baseline = cvjepa lag motif-MoE JEPA-off (0.388 @ run.py). Goal: video-driven ga
 ## Autoresearch round-3 — capacity sweep: NO IMPROVEMENT (discard)
 dm256 0.3821, dff512 0.3853, dm192 0.3854, K20 0.3861, lagw32 0.3908, lagw24 0.3919 — all > dm128 0.3789.
 Capacity/representation knobs tapped at 10ep. Best stays **d_model 128 = 0.3789**. Round-4: train longer + lr + longer lookback.
+
+## Autoresearch round-4 — train longer / lr / lookback: NO IMPROVEMENT (converged)
+ep20 0.3789 (== 10ep, converged), lr1e3 0.3812, dm96 0.3815, lr5e4 0.3825, sl336 0.3969 (longer lookback hurt).
+**PLATEAU at 0.3789.** Best = fused video-primary RCF, d_model 128, lag-video motif-MoE K10, JEPA-off, seq96, 10ep.
+
+## === AUTORESEARCH FINAL SUMMARY ===
+**Best: RWKVJEPAFused (video-primary RCF) = MSE 0.3789 / MAE 0.4026 on ETTh1 h96.**
+Architecture: GTR's learnable seasonal cycle Q as an additive bias + the channel-independent **lag-video
+motif-MoE** modelling the deseasonalised series (the workhorse). Render = videos_ai (raw float; == 8-bit).
+Journey: VideoRWKV-MAE 0.586 → VideoRWKVJEPA 0.431 → CometVideoJEPA (CI+motif-MoE) 0.388 → **fused 0.3789**.
+Beats: linear bar 0.389, GTR-alone 0.3804, video-alone 0.3821, VisionTS-region ~0.39. (CometNet-paper 0.345
+uses the full offline DTW motif library; ours is a lighter learnable-MoE.)
+**Contribution is video-driven:** cycle-only ablation = 1.006 → the video carries ~0.63 MSE; the seasonal
+cycle alone is useless on ETTh1.
+KEEPS: video-primary RCF, d_model 128, lag-video, motif-MoE K=10, JEPA-off, videos_ai.
+DISCARDS: GTR-primary boosting (0.411), JEPA (hurts), linres (hurts), d_model>128 (overfit), longer lag,
+deeper, seq_len 336, longer training (no gain), lr≠3e-4.

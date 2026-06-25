@@ -25,3 +25,6 @@ lag-video essential (raw-window=0.580), JEPA hurts (0.393), linres hurts (0.422)
 motif-MoE, JEPA-off.
 
 ## Results — see autoresearch_results.tsv + results_tsvideo.md. Round logs in .remember/tsv_*.log.
+
+## FINAL (autoresearch, 4 rounds, 22 trainings)
+Best **0.3789** ETTh1 h96 — fused video-primary RCF (d_model 128, lag-video motif-MoE, JEPA-off, videos_ai). Video-driven (cycle-only 1.006). Pushed to rwkvjepa.git.
