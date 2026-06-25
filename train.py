@@ -44,7 +44,7 @@ def build_args(a):
         augmentation_ratio=0,
         # rwkvjepa knobs (read via getattr in models)
         cm_video=a.cm_video, cm_render=a.cm_render, cm_lag_w=a.cm_lag_w, cm_motifs=a.cm_motifs,
-        cm_balance=a.cm_balance, cm_expert_hidden=a.cm_expert_hidden,
+        cm_balance=a.cm_balance, cm_expert_hidden=a.cm_expert_hidden, cm_grid=a.cm_grid,
         vr_jepa_weight=a.vr_jepa_weight, vr_mask=a.vr_mask, vr_ema=a.vr_ema,
         vr_pred_layers=a.vr_pred_layers, vr_linear_residual=a.vr_linear_residual, vr_revin=1,
         fuse_res_scale=a.fuse_res_scale, fuse_deseason=a.fuse_deseason, fuse_video_off=a.fuse_video_off,
@@ -96,6 +96,7 @@ def main():
     ap.add_argument("--cm_video", default="lag"); ap.add_argument("--cm_render", default="ai")
     ap.add_argument("--cm_lag_w", type=int, default=48); ap.add_argument("--cm_motifs", type=int, default=10)
     ap.add_argument("--cm_balance", type=float, default=0.1); ap.add_argument("--cm_expert_hidden", type=int, default=0)
+    ap.add_argument("--cm_grid", type=int, default=7); ap.add_argument("--jepa_anneal", type=int, default=0)
     ap.add_argument("--vr_jepa_weight", type=float, default=0.0); ap.add_argument("--vr_mask", type=float, default=0.5)
     ap.add_argument("--vr_ema", type=float, default=0.996); ap.add_argument("--vr_pred_layers", type=int, default=1)
     ap.add_argument("--vr_linear_residual", type=int, default=0)
@@ -121,7 +122,13 @@ def main():
 
     best_val, best_state, bad = float("inf"), None, 0
     t0 = time.time()
+    base_jw = a.vr_jepa_weight
     for ep in range(a.epochs):
+        if a.jepa_anneal:                       # Step-D2: anneal JEPA weight -> 0 (soft pretrain->finetune)
+            jw = base_jw * max(0.0, 1.0 - ep / max(1, a.epochs - 1))
+            vm = model.video if hasattr(model, "video") else model
+            if hasattr(vm, "jepa_weight"):
+                vm.jepa_weight = jw
         model.train()
         for batch in train_loader:
             opt.zero_grad()

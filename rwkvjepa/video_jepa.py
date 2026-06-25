@@ -101,17 +101,17 @@ class TemporalBlock(nn.Module):
 
 
 class FrameEncoder(nn.Module):
-    """per-frame feature vector [B,L,m] -> reps [B,L,d]. Frame-as-token (no patchify)."""
-    def __init__(self, in_dim, dim, ffn, layers, seq_len):
+    """per-frame feature [B,L,m] (or a pluggable embedder's input) -> reps [B,L,d]. Frame-as-token."""
+    def __init__(self, in_dim, dim, ffn, layers, seq_len, embed=None):
         super().__init__()
-        self.embed = nn.Linear(in_dim, dim)
+        self.embed = embed if embed is not None else nn.Linear(in_dim, dim)   # pluggable (e.g. Conv2d tri3)
         self.pos = nn.Parameter(torch.zeros(1, seq_len, dim))
         self.blocks = nn.ModuleList([TemporalBlock(dim, ffn, bidir=False) for _ in range(layers)])
         self.norm = nn.LayerNorm(dim)
 
     def forward(self, feats, mask=None, mask_token=None):
-        B, L, m = feats.shape
-        x = self.embed(feats)
+        L = feats.shape[1]
+        x = self.embed(feats)                                                 # -> [B,L,d]
         if mask is not None:
             x = torch.where(mask.unsqueeze(-1), mask_token.view(1, 1, -1), x)
         x = x + self.pos[:, :L]

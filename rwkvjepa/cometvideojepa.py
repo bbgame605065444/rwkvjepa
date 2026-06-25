@@ -47,6 +47,7 @@ class Model(nn.Module):
         self.cm_video = str(_get(configs, "cm_video", "lag"))      # lag | raw
         self.cm_render = str(_get(configs, "cm_render", "ai"))     # ai=raw float (videos_ai) | human=8-bit quantized (videos)
         self.lag_w = int(_get(configs, "cm_lag_w", 48))
+        self.tri3_grid = int(_get(configs, "cm_grid", 7))         # 3-channel video: G (W=G*G)
         in_dim = self.lag_w if self.cm_video == "lag" else 1
         self.use_revin = bool(int(_get(configs, "vr_revin", 1)))
         self.mask_ratio = float(_get(configs, "vr_mask", 0.5))
@@ -54,7 +55,11 @@ class Model(nn.Module):
         self.ema = float(_get(configs, "vr_ema", 0.996))
         pred_layers = int(_get(configs, "vr_pred_layers", 1))
 
-        self.encoder = FrameEncoder(in_dim, d, ffn, layers, self.seq_len)
+        if self.cm_video == "tri3":
+            from rwkvjepa.video3ch import Tri3Embed
+            self.encoder = FrameEncoder(1, d, ffn, layers, self.seq_len, embed=Tri3Embed(d, self.tri3_grid))
+        else:
+            self.encoder = FrameEncoder(in_dim, d, ffn, layers, self.seq_len)
         self.target_encoder = copy.deepcopy(self.encoder)
         for p in self.target_encoder.parameters():
             p.requires_grad_(False)
@@ -105,12 +110,17 @@ class Model(nn.Module):
             mu, sd, xn = 0.0, 1.0, x_enc
 
         x_ci = xn.permute(0, 2, 1).reshape(B * V, L, 1)            # channel-independent
-        feats = build_frame_feats(self.cm_video, x_ci, lag_w=self.lag_w)   # [N,L,in_dim]
-        if self.cm_render == "human":   # videos: 8-bit quantize+derender (vs videos_ai raw float)
-            lo = feats.amin((1, 2), keepdim=True)
-            hi = feats.amax((1, 2), keepdim=True)
-            feats = torch.round((feats - lo) / (hi - lo + 1e-6) * 255.0) / 255.0 * (hi - lo) + lo
-        N = feats.size(0)
+        if self.cm_video == "tri3":                                # 3-channel video (lag/level/velocity)
+            from rwkvjepa.video3ch import build_tri3
+            feats = build_tri3(x_ci, self.tri3_grid)               # [N,L,3,G,G]
+            N = feats.size(0)
+        else:
+            feats = build_frame_feats(self.cm_video, x_ci, lag_w=self.lag_w)   # [N,L,in_dim]
+            if self.cm_render == "human":   # videos: 8-bit quantize+derender (vs videos_ai raw float)
+                lo = feats.amin((1, 2), keepdim=True)
+                hi = feats.amax((1, 2), keepdim=True)
+                feats = torch.round((feats - lo) / (hi - lo + 1e-6) * 255.0) / 255.0 * (hi - lo) + lo
+            N = feats.size(0)
 
         z_clean = self.encoder(feats)                             # [N,L,d]
         if self.training and self.jepa_weight > 0:
@@ -148,6 +158,7 @@ class Model(nn.Module):
             out_ci = lin + self.res_scale * out_ci
 
         aux = self.cm_balance * balance
+        self.last_jepa = float(jepa.detach()) if jepa is not None else 0.0   # for diagnosis
         if jepa is not None:
             aux = aux + self.jepa_weight * jepa
         self.aux_loss = aux
