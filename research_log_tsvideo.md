@@ -65,3 +65,13 @@ Baseline = cvjepa lag motif-MoE JEPA-off (0.388 @ run.py). Goal: video-driven ga
 | cvjepa_human (videos) | 0.3821 | **videos==videos_ai** (8-bit lossless) → use videos_ai |
 | fused_boost (GTR-primary) | 0.4107 | DISCARD (full+full ensemble conflicts) |
 **Verdict:** fused_des kept (0.3800). videos_ai selected (ties videos). **Video contribution marginal** (0.3800 vs gtr 0.3804) → round-2 focus = make the video carry the signal; add cycle-only ablation (fuse_video_off) to measure it.
+
+## Autoresearch round-2 — video-branch focus + contribution ablation
+| config | MSE | note |
+|---|--:|---|
+| **r2_dm128 (d_model 128)** | **0.3789** | KEEP — video capacity ↑ helps (video-driven) |
+| r2_base / r2_k16 | 0.3800 | |
+| r2_lagw96 | 0.3819 | longer lag worse |
+| r2_el3 | 0.3848 | deeper worse |
+| **r2_cycleonly (VIDEO OFF)** | **1.0061** | bare seasonal cycle ~useless |
+**Contribution from VIDEO CONFIRMED dominant:** cycle-only 1.006 vs fused 0.379 → the video carries ~0.63 MSE; the seasonal cycle alone is worthless on ETTh1. Kept d_model 128 (0.3789).
