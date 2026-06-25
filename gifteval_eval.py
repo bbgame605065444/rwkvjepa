@@ -69,8 +69,7 @@ def mase_denom(train, m):
 
 def eval_dataset(model, name, seq_len, otl, n_windows=3):
     rows = []
-    for info in sorted(glob.glob(os.path.join(DATA_ROOT, name, "**", "dataset_info.json"), recursive=True)
-                       + glob.glob(os.path.join(DATA_ROOT, name, "dataset_info.json"))):
+    for info in sorted(set(glob.glob(os.path.join(DATA_ROOT, name, "**", "dataset_info.json"), recursive=True))):
         ddir = os.path.dirname(info)
         arrow = sorted(glob.glob(os.path.join(ddir, "data-*.arrow")))
         if not arrow:

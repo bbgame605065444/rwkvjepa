@@ -53,3 +53,19 @@ unused at forecast); **0 forecast-path params missing** (OpenLTM doesn't save th
 **Epoch-1 zero-shot sanity (2 datasets):** us_births/W MASE 1.064, saugeenday/W MASE 0.757, **mean 0.911**
 (<1 ⇒ beats seasonal-naive). Final-checkpoint subset eval auto-runs when the 2-epoch pretrain finishes
 → `gifteval_results.tsv`.
+
+## RESULTS — CometFM (2-epoch UTSD-1G pretrain) → GIFT-Eval subset (zero-shot, gluonts-free)
+Pretrain (UTSD-1G, 2 ep, b=256): best-val checkpoint (epoch 1), held-out test **MSE 0.722 / MAE 0.517**.
+Zero-shot GIFT-Eval subset (MASE = MAE / seasonal-naive MAE; <1 beats the naive baseline):
+| dataset/freq | H | MASE | MSE | MAE |
+|---|--:|--:|--:|--:|
+| m4_weekly/W | 8 | **0.467** | 371684 | 277.4 |
+| saugeenday/W | 8 | **0.757** | 467.0 | 15.7 |
+| ett1/T (min) | 48 | **0.802** | 13.9 | 2.28 |
+| ett1/D | 30 | 1.012 | 45552 | 146.0 |
+| us_births/W | 8 | 1.064 | 9.39e6 | 2239.6 |
+| ett1/H | 48 | 1.108 | 143.2 | 6.83 |
+| **MEAN** | | **0.869** | | |
+**Mean MASE 0.869 (<1)** — the foundation video-JEPA forecaster beats seasonal-naive zero-shot after only 2
+epochs. Strongest on weekly/minutely; weakest on hourly/daily ETT (zero-shot, no ETT in the eval-time tuning).
+Next: more pretrain epochs + the full 28-dataset GIFT-Eval. (`gifteval_results.tsv`.)
