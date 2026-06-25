@@ -96,3 +96,17 @@ cycle alone is useless on ETTh1.
 KEEPS: video-primary RCF, d_model 128, lag-video, motif-MoE K=10, JEPA-off, videos_ai.
 DISCARDS: GTR-primary boosting (0.411), JEPA (hurts), linres (hurts), d_model>128 (overfit), longer lag,
 deeper, seq_len 336, longer training (no gain), lr≠3e-4.
+
+## Phase 5 — 3-channel video + JEPA scheduling (diagnosis-gated): TWO HONEST NEGATIVES
+Diagnosis FIRST (JEPA_DIAGNOSIS.md): NOT collapse (rank 12.4≈13.4), pretext ALIGNED (corr +0.713), JEPA helps
+early only → scheduling signature, not VICReg. Tested scheduling (not VICReg).
+| id | MSE | verdict |
+|---|--:|---|
+| P5.1 fused_base | 0.3789 | control |
+| P5.2 +JEPA w=0.1 | 0.3788 | tie (no gain) |
+| P5.3 +JEPA anneal | 0.3798 | slightly worse |
+| P5.4 fused tri3 (3-ch video) | 0.3971 | HURTS (+5%) |
+| P5.5 cvjepa tri3 | 0.4010 | HURTS (+6%) |
+**Verdict:** 3-channel video refuted (extra channels + Conv2d spatial mixer add noise; same lesson as patchify);
+JEPA scheduling negligible (diagnosis predicted it). Best stays **0.3789** (1-channel lag-video). Diagnosis-first
+discipline avoided adding unjustified VICReg.

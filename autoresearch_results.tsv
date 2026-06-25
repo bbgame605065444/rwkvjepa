@@ -23,3 +23,8 @@ r4_ep20	fused	0.3789	0.4026	0.7041	1115123	cm_video=lag,render=ai,lagw=48,K=10,j
 r4_sl336	fused	0.3969	0.4160	0.6948	1176563	cm_video=lag,render=ai,lagw=48,K=10,jepa=0.0,linres=0,cycle=24,resscale=0.3,ep=20
 smoke_tri3	cvjepa	0.5260	0.4843	0.8578	1146571	cm_video=tri3,render=ai,lagw=48,K=10,jepa=0.0,linres=0,cycle=0,resscale=0.3,ep=2
 smoke_fused_tri3	fused	0.5227	0.4809	0.8566	1146739	cm_video=tri3,render=ai,lagw=48,K=10,jepa=0.0,linres=0,cycle=24,resscale=0.3,ep=2
+p5_fused_base	fused	0.3789	0.4026	0.7041	1115123	cm_video=lag,render=ai,lagw=48,K=10,jepa=0.0,linres=0,cycle=24,resscale=0.3,ep=10
+p5_cvjepa_tri3	cvjepa	0.4010	0.4224	0.7295	1146571	cm_video=tri3,render=ai,lagw=48,K=10,jepa=0.0,linres=0,cycle=0,resscale=0.3,ep=10
+p5_fused_tri3	fused	0.3971	0.4182	0.7161	1146739	cm_video=tri3,render=ai,lagw=48,K=10,jepa=0.0,linres=0,cycle=24,resscale=0.3,ep=10
+p5_fused_jepa01	fused	0.3788	0.4036	0.6958	1115123	cm_video=lag,render=ai,lagw=48,K=10,jepa=0.1,linres=0,cycle=24,resscale=0.3,ep=10
+p5_fused_jepaAnneal	fused	0.3798	0.4027	0.6942	1115123	cm_video=lag,render=ai,lagw=48,K=10,jepa=1.0,linres=0,cycle=24,resscale=0.3,ep=10

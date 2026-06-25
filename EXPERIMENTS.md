@@ -47,6 +47,8 @@ benchmark number; lower is better). The number to beat is the **linear bar = 0.3
 | P4.6 | **+ d_model 128 (final best)** | **0.3789** | 0.4026 | local |
 | P4.10 | cycle-only (video OFF) ablation | 1.0061 | 0.7504 | local |
 | P4.* | autoresearch tuning (discarded) | 0.38–0.40 | — | local |
+| P5.2 | + JEPA weight 0.1 (scheduling) | 0.3788 | 0.4036 | local |
+| P5.4–5 | 3-channel video (tri3) | 0.397–0.401 | — | local |
 
 ---
 
@@ -216,6 +218,38 @@ the default 3e-4.
 **P4.21 · seq_len 336 — 0.3969.** Give the model a much longer lookback (336 h). It *hurt* here — the
 lag-video + cycle pairing isn't tuned for long inputs (a separate setting; a known future direction). With no
 new best in round 4, the loop **plateaued at 0.3789** and we stopped.
+
+## Phase 5 — 3-channel video + JEPA scheduling (diagnosis-gated)
+
+Two ideas, each tested honestly. The JEPA work was **gated on a numerical diagnosis first** (`JEPA_DIAGNOSIS.md`):
+the encoder is *not* collapsing (effective rank 12.4 with JEPA vs 13.4 without — equal; low rank is intrinsic),
+and the JEPA pretext is *aligned* (corr +0.713) but only helps *early* — a **scheduling** signature, **not**
+the anti-collapse (VICReg) signature. So we tested scheduling, not VICReg.
+
+**P5.1 · fused_base (control) — 0.3789.** Re-run of the Phase-4 winner, to compare P5 against on the same harness.
+
+**P5.2 · fused + JEPA weight 0.1 (scheduling) — 0.3788.** Turn JEPA back on but at a *small* weight (the
+diagnosis-matched fix: keep the early benefit, avoid late competition). Result **ties** the control (0.3788 vs
+0.3789 — within noise). So even the *correct* JEPA lever gives no meaningful gain at convergence — confirming
+the diagnosis that JEPA isn't the bottleneck here. (Kept off; not worth the complexity.)
+
+**P5.3 · fused + JEPA anneal — 0.3798.** Anneal the JEPA weight 1→0 over training (soft pretrain→finetune).
+Slightly *worse* than the control. Same conclusion: scheduling recovers the early benefit but the converged
+number is unchanged. Honest negative — JEPA-2026 scheduling does not help our model at convergence.
+
+**P5.4 · fused + 3-channel video (tri3) — 0.3971.** The headline new architecture: instead of the 1-channel
+lag-video, stack the **top-3 channel-independent video channels — lag-window, level, velocity — as a true
+3-channel image**, mix them with a small **Conv2d spatial mixer**, then frame-as-token. It **HURTS** (0.397 vs
+0.379, +5%). The extra channels add noise and the 2-D spatial processing is wasteful at this tiny resolution —
+the same lesson as Phase-1's patchify. **3-channel video refuted; the plain 1-channel lag-video is best.**
+
+**P5.5 · cvjepa + 3-channel video (tri3) — 0.4010.** Same tri3 on the non-fused CometVideoJEPA host — also
+worse (+6%). Confirms P5.4 across hosts. (tri3 is a channel-independent construction, so it applies to the CI
+hosts cvjepa/fused; the channel-mixed jepa_lag cannot take a per-channel 3-channel image, so it is excluded.)
+
+**Phase-5 verdict:** both ideas are honest negatives — the 3-channel video hurts, and JEPA (even scheduled the
+way the diagnosis prescribed) is a no-op at convergence. The diagnosis-first discipline paid off: it predicted
+the JEPA outcome and steered us away from adding unjustified VICReg machinery. **Best remains 0.3789.**
 
 ---
 
