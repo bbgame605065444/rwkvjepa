@@ -10,3 +10,9 @@ r2_base	fused	0.3800	0.4043	0.6946	370099	cm_video=lag,render=ai,lagw=48,K=10,je
 r2_k16	fused	0.3800	0.4019	0.7006	482425	cm_video=lag,render=ai,lagw=48,K=16,jepa=0.0,linres=0,cycle=24,resscale=0.3,ep=10
 r2_el3	fused	0.3848	0.4075	0.7021	420083	cm_video=lag,render=ai,lagw=48,K=10,jepa=0.0,linres=0,cycle=24,resscale=0.3,ep=10
 r2_dm128	fused	0.3789	0.4026	0.7041	1115123	cm_video=lag,render=ai,lagw=48,K=10,jepa=0.0,linres=0,cycle=24,resscale=0.3,ep=10
+r3_dff512	fused	0.3853	0.4041	0.7036	1312499	cm_video=lag,render=ai,lagw=48,K=10,jepa=0.0,linres=0,cycle=24,resscale=0.3,ep=10
+r3_lagw32	fused	0.3908	0.4087	0.7173	1113075	cm_video=lag,render=ai,lagw=32,K=10,jepa=0.0,linres=0,cycle=24,resscale=0.3,ep=10
+r3_dm192	fused	0.3854	0.4046	0.6994	2236979	cm_video=lag,render=ai,lagw=48,K=10,jepa=0.0,linres=0,cycle=24,resscale=0.3,ep=10
+r3_lagw24	fused	0.3919	0.4088	0.7303	1112051	cm_video=lag,render=ai,lagw=24,K=10,jepa=0.0,linres=0,cycle=24,resscale=0.3,ep=10
+r3_k20	fused	0.3861	0.4041	0.7035	1734333	cm_video=lag,render=ai,lagw=48,K=20,jepa=0.0,linres=0,cycle=24,resscale=0.3,ep=10
+r3_dm256	fused	0.3821	0.4065	0.7020	3735667	cm_video=lag,render=ai,lagw=48,K=10,jepa=0.0,linres=0,cycle=24,resscale=0.3,ep=10

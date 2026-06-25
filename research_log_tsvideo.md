@@ -75,3 +75,7 @@ Baseline = cvjepa lag motif-MoE JEPA-off (0.388 @ run.py). Goal: video-driven ga
 | r2_el3 | 0.3848 | deeper worse |
 | **r2_cycleonly (VIDEO OFF)** | **1.0061** | bare seasonal cycle ~useless |
 **Contribution from VIDEO CONFIRMED dominant:** cycle-only 1.006 vs fused 0.379 → the video carries ~0.63 MSE; the seasonal cycle alone is worthless on ETTh1. Kept d_model 128 (0.3789).
+
+## Autoresearch round-3 — capacity sweep: NO IMPROVEMENT (discard)
+dm256 0.3821, dff512 0.3853, dm192 0.3854, K20 0.3861, lagw32 0.3908, lagw24 0.3919 — all > dm128 0.3789.
+Capacity/representation knobs tapped at 10ep. Best stays **d_model 128 = 0.3789**. Round-4: train longer + lr + longer lookback.
