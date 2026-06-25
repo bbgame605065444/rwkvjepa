@@ -7,3 +7,5 @@ paper_figures/
 __pycache__/
 *.pyc
 Time-Series-Library/
+.gifteval_venv/
+gifteval_data/
