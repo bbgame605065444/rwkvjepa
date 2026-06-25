@@ -38,3 +38,18 @@ pretrained CometFM as a **gluonts `Predictor`** (`predict()` yields `SampleForec
 `gluonts.model.evaluate_model` (MASE / CRPS / MSE) per dataset×term, autoregressive-rolling for long horizons
 (matching OpenLTM zero-shot). Start with 2–3 small datasets to validate, then broaden. Code:
 `ts_decompose23d/gifteval_eval.py`.
+
+## GIFT-Eval — gluonts-free subset evaluator (chosen path)
+`gluonts` in the shared env is corrupted (a prior edit left a Chinese docstring un-indented in
+`transform/split.py`); patching shared site-packages was declined, so we go **gluonts-free**:
+`gifteval_eval.py` loads the GIFT-Eval `.arrow` data directly (HF `datasets`), forecasts with the
+pretrained CometFM (channel-independent; **autoregressive-rolled** for horizons > output_token_len=96),
+and computes **MASE / MSE / MAE** itself. APPROXIMATE (single→few last-windows per series + a per-freq
+short-term horizon map) — indicative, not the exact leaderboard split. Subset: us_births, saugeenday,
+hospital, m4_weekly, ett1 (incl. multivariate ett1 → exercises the channel-independent path).
+
+**Checkpoint loading verified:** the 69 "missing" keys are all the EMA `target_encoder` (JEPA-only,
+unused at forecast); **0 forecast-path params missing** (OpenLTM doesn't save the frozen EMA copy).
+**Epoch-1 zero-shot sanity (2 datasets):** us_births/W MASE 1.064, saugeenday/W MASE 0.757, **mean 0.911**
+(<1 ⇒ beats seasonal-naive). Final-checkpoint subset eval auto-runs when the 2-epoch pretrain finishes
+→ `gifteval_results.tsv`.
