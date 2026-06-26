@@ -69,3 +69,49 @@ outlier; median ≈ 2.0, ex-covid mean ≈ 1.6). Expected for a small (7M) video
 fully zero-shot**. The deliverable is a *working, official-harness* UTSD-1G→GIFT-Eval pipeline with verified
 numbers. Next, when the GPU is free: more pretrain epochs (the loss was still descending), larger width, and the
 full 28-dataset GIFT-Eval sweep — and fix the multi-freq loaders (ett1/us_births need freq-qualified names).
+
+## Prepare GIFT → proposed video format (verification gate, `prepare_gift_video.py`)
+The contribution is the **video modelling**, so before evaluating we make the GIFT-Eval→video conversion
+**explicit and verified** (rather than implicit inside `forecast`): each GIFT-Eval context window is pushed
+through the *exact* model pipeline — RevIN (per-window z) → channel-independent `[B*V, L, 1]` →
+`build_frame_feats("lag", lag_w=48)` → lag-video `[N, 96, 48]` (frame t = trailing 48 lags, left-padded;
+`cm_render="ai"` raw float). The script checks, per dataset: finiteness, the lag construction (`lag_ok`: frame
+L-1 == the trailing 48 of the normed series), the left-pad (`pad_ok`), and RevIN stats, and renders the
+lag-video heatmap to `figures/gift_video/<ds>.png`. Multi-freq datasets use freq-qualified names (`ett1/H`,
+`electricity/H`); `to_univariate=False` (the `True` path breaks the gluonts splitter); multivariate series are
+expanded channel-independently. **Result: 5/5 PASS** (`prepared_gift_video.tsv`) — hospital, m4_weekly,
+car_parts (univar) and ett1/H, electricity/H (multivar) all map cleanly to `96×48`, RevIN mu≈0/sd≈0.99. The
+foreign GIFT-Eval series (varied freq/scale) enter the pretrained encoder in exactly its training representation.
+
+## RESULTS — current checkpoint (extended UTSD-1G run, epoch 3) → GIFT-Eval (zero-shot, OFFICIAL harness)
+Evaluated the **current best-val `checkpoint.pth`** (loaded clean: 0 forecast-path params missing) over the
+proposed lag-video path. Also fixed a **multivariate forecast bug** in `gifteval_eval.py` (the SampleForecast
+was `[1,C,H]`; gluonts expects `[1,H,C]`) — this unblocked ett1/electricity. `gifteval_results.tsv`:
+| dataset/freq | H | MASE | MSE | MAE | WQL | verdict |
+|---|--:|--:|--:|--:|--:|---|
+| hospital/M | 12 | **0.837** | 4711 | 22.2 | 0.080 | beats naive ✓ |
+| ett1/H | 48 | 1.063 | 144.5 | 6.32 | 0.295 | ≈ naive (new, multivar) |
+| car_parts_with_missing/M | 12 | 1.062 | 1.39 | 0.60 | 1.449 | ≈ naive (intermittent) |
+| electricity/H | 48 | 2.074 | 3.74e6 | 366.4 | 0.173 | worse (new, multivar) |
+| m4_weekly/W | 13 | 3.020 | 4.50e5 | 338.6 | 0.062 | worse |
+
+**MEAN MASE = 1.611** over these 5. hospital/m4_weekly/car_parts reproduce the 2-epoch numbers **to 3 d.p.** —
+the best-val `checkpoint.pth` (frozen 06-25 12:41) is still an early-epoch snapshot: held-out UTSD val did not
+improve over ~12h of epoch-3 training, so the selected forecaster ≈ the 2-epoch one.
+
+### Best-val vs latest-epoch (does continued pretraining help transfer?)
+Evaluated `last_state.pth` (latest epoch-3 weights, 06-26 00:57) on the 4 fast datasets vs best-val:
+| dataset | best-val MASE | latest-epoch MASE | Δ |
+|---|--:|--:|---|
+| hospital/M | 0.837 | 0.837 | = |
+| ett1/H | 1.063 | 1.075 | +0.01 (worse) |
+| m4_weekly/W | 3.020 | 2.916 | −0.10 (better) |
+| car_parts/M | 1.062 | 1.136 | +0.07 (worse) |
+| **mean(4)** | **1.495** | **1.491** | **flat** |
+
+**Honest verdict:** continued pretraining past the best-val point is a **wash** — mixed per-dataset (m4_weekly
+better, ett1/car_parts worse, hospital identical), net-flat mean. The 7M video-JEPA on UTSD-1G has **plateaued**
+for zero-shot transfer; "more epochs" is *not* the lever (contradicts the earlier guess that the loss "still
+descending" would help — train loss ≠ transfer). The real levers are **model scale** and the **full UTSD-12G
+corpus** (converted+verified: 289,560 series in `dataset/UTSD-12G-npy`, ready to pretrain). Repro:
+`GIFT_EVAL=$PWD/gifteval_data .gifteval_venv/bin/python gifteval_eval.py --datasets ett1/H hospital m4_weekly electricity/H car_parts_with_missing`.

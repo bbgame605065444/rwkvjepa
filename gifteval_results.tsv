@@ -1,5 +1,5 @@
 dataset,term,H,MASE,MSE,MAE,WQL
-hospital/M,short,12,0.8373,4711.453,22.1503,0.0804
-covid_deaths/D,short,30,54.2166,5675988.4391,394.6683,0.1485
-m4_weekly/W-SUN,short,13,3.0199,449760.7885,338.5888,0.0617
-car_parts_with_missing/M,short,12,1.0621,1.3897,0.6043,1.449
+hospital/M,short,12,0.8371,5271.0146,22.4694,0.0816
+ett1/H/H,short,48,1.0754,139.6715,6.3417,0.296
+m4_weekly/W-SUN,short,13,2.9162,419340.7397,332.7498,0.0606
+car_parts_with_missing/M,short,12,1.1363,1.4715,0.6598,1.5822

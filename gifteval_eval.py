@@ -35,9 +35,11 @@ def load_cometfm(ckpt):
     cfg = SimpleNamespace(task_name="forecast", seq_len=CTX, output_token_len=OUT, pred_len=OUT,
                           d_model=256, d_ff=512, e_layers=4, dropout=0.1, enc_in=1, vr_jepa_weight=0.0)
     model = CometFM(cfg)
-    sd = torch.load(ckpt, map_location="cpu")
-    if isinstance(sd, dict) and "model" in sd:
-        sd = sd["model"]
+    sd = torch.load(ckpt, map_location="cpu", weights_only=False)   # last_state.pth holds numpy scalars (own ckpt)
+    if isinstance(sd, dict):                                        # full training-state file -> pull the weights
+        for k in ("model", "model_state_dict", "state_dict"):
+            if k in sd and isinstance(sd[k], dict):
+                sd = sd[k]; break
     miss, unexp = model.load_state_dict(sd, strict=False)
     fp_miss = [k for k in miss if "target_encoder" not in k]      # EMA target = JEPA-only, unused at forecast
     print(f"[load] {ckpt}\n[load] missing={len(miss)} (forecast-path missing={len(fp_miss)}) unexpected={len(unexp)}")
@@ -67,7 +69,7 @@ class CometFMPredictor:
                 preds.append(out)
                 cur = torch.cat([cur, out], 0)[-CTX:]              # roll
             fc = torch.cat(preds, 0)[:self.prediction_length].cpu().numpy()  # [H, C]
-            samples = fc.T[None, :, :] if C > 1 else fc[:, 0][None, :]       # [1,(C,)H]
+            samples = fc[None, :, :] if C > 1 else fc[:, 0][None, :]         # [1,H,C] multivar / [1,H] univar
             yield SampleForecast(samples=samples, start_date=entry["start"] + T, item_id=entry.get("item_id"))
 
 

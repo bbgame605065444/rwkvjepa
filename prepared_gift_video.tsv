@@ -1,0 +1,6 @@
+dataset,H,windows,video_shape,finite,lag_ok,pad_ok,revin_mu,revin_sd,vmin,vmax,verdict
+ett1_H/H,48,140,96x48,True,True,True,-0.0,0.995,-3.9,3.39,PASS
+hospital/M,12,400,96x48,True,True,True,0.0,0.995,-4.61,5.81,PASS
+m4_weekly/W-SUN,13,359,96x48,True,True,True,0.0,0.995,-6.58,6.12,PASS
+electricity_H/H,48,400,96x48,True,True,True,-0.0,0.995,-5.62,6.16,PASS
+car_parts_with_missing/M,12,400,96x48,True,True,True,-0.0,0.992,-1.31,9.7,PASS
