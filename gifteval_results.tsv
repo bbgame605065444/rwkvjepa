@@ -1,5 +1,11 @@
 dataset,term,H,MASE,MSE,MAE,WQL
-hospital/M,short,12,0.8371,5271.0146,22.4694,0.0816
-ett1/H/H,short,48,1.0754,139.6715,6.3417,0.296
-m4_weekly/W-SUN,short,13,2.9162,419340.7397,332.7498,0.0606
-car_parts_with_missing/M,short,12,1.1363,1.4715,0.6598,1.5822
+hospital/M,short,12,0.8373,4711.4551,22.1503,0.0804
+ett1/H/H,short,48,1.0633,144.4906,6.3174,0.2949
+car_parts_with_missing/M,short,12,1.0621,1.3897,0.6043,1.449
+electricity/H/H,short,48,2.0743,3741165.6707,366.3968,0.173
+m4_weekly/W-SUN,short,13,3.0199,449760.7679,338.5887,0.0617
+ett2/H/H,short,48,0.9314,156.3132,8.1287,0.1031
+m4_hourly/H,short,48,4.0291,13831886.8866,572.5453,0.0782
+m4_daily/D,short,14,3.8276,376381.5379,200.7253,0.031
+solar/H/H,short,48,1.4222,961.9378,18.4309,0.6794
+restaurant/D,short,30,0.7718,nan,nan,0.017

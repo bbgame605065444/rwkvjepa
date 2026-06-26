@@ -115,3 +115,20 @@ for zero-shot transfer; "more epochs" is *not* the lever (contradicts the earlie
 descending" would help — train loss ≠ transfer). The real levers are **model scale** and the **full UTSD-12G
 corpus** (converted+verified: 289,560 series in `dataset/UTSD-12G-npy`, ready to pretrain). Repro:
 `GIFT_EVAL=$PWD/gifteval_data .gifteval_venv/bin/python gifteval_eval.py --datasets ett1/H hospital m4_weekly electricity/H car_parts_with_missing`.
+
+## RESULTS — 10-dataset GIFT-Eval (current best-val ckpt, zero-shot, OFFICIAL harness)
+Extended to 10 datasets (`gifteval_results.tsv`): restaurant/D **0.772**, hospital/M **0.837**, ett2/H **0.931**
+(all beat seasonal-naive), car_parts/M 1.062, ett1/H 1.063, solar/H 1.422, electricity/H 2.074, m4_weekly 3.020,
+m4_daily 3.828, m4_hourly 4.029. **Aggregate: arith-mean 1.904, geomean 1.574, median 1.243; 3/10 beat naive.**
+M4 high-frequency is the weakness (rolling 96-step zero-shot). restaurant MSE/MAE are `nan` (intermittent zeros)
+but its MASE is valid.
+
+### Literature positioning → `LITERATURE_FOUNDATION_GIFTEVAL.md`
+Sourced review (URL-verified) of foundation models on GIFT-Eval. The leaderboard's MASE/CRPS are
+**seasonal-naive-normalized** (naive = 1.00); top single models sit at **MASE ≈ 0.68–0.70** (~30% better than
+naive), with the very top being agentic/ensemble systems (Cobra-Agent, Prism, TSOrchestra, Toto-2.0). **Honest
+verdict:** our 7M/~2-epoch/zero-shot CometFM (~1.57 geomean) is **not** near that frontier and is worse than
+seasonal-naive on aggregate over this subset — a working proof-of-concept, not a SOTA claim. The encouraging
+signal: the **image/video representation class has leaderboard precedent — VisionTS (ImageNet visual MAE) ranked
+#1 in normalized MASE among published TSF foundation models (Nov 2024)** — so scaling our video-JEPA (bigger model
++ UTSD-12G) is a direction with real precedent. Full table + sources in `LITERATURE_FOUNDATION_GIFTEVAL.md`.
